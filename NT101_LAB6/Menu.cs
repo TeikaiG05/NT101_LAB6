@@ -10,11 +10,17 @@ using System.Windows.Forms;
 
 namespace NT101_LAB6
 {
-    public partial class Form1 : Form
+    public partial class Menu : Form
     {
-        public Form1()
+        public Menu()
         {
             InitializeComponent();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Task1 task1 = new Task1();
+            task1.Show();
         }
     }
 }
