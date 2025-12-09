@@ -166,7 +166,7 @@
             this.Controls.Add(this.txtSubCipher);
             this.Controls.Add(this.lblSubCipher);
             this.Name = "Task2";
-            this.Text = "Task2 - Mono-alphabetic substitution cipher:";
+            this.Text = "Task2 - Mono-alphabetic substitution cipher";
             ((System.ComponentModel.ISupportInitialize)(this.numSubIterations)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

@@ -27,6 +27,30 @@ namespace NT101_LAB6
 
             string key = FindKeyByFrequency(upper, keyLen);
 
+            {
+                int n = key.Length;
+                for (int len = 1; len <= n; len++)
+                {
+                    if (n % len != 0) continue;
+
+                    bool ok = true;
+                    for (int i = 0; i < n; i++)
+                    {
+                        if (key[i] != key[i % len])
+                        {
+                            ok = false;
+                            break;
+                        }
+                    }
+
+                    if (ok)
+                    {
+                        key = key.Substring(0, len);
+                        break;
+                    }
+                }
+            }
+
             string plaintext = Decrypt(cipher, key);
 
             return (key, plaintext);
@@ -192,5 +216,6 @@ namespace NT101_LAB6
             }
             return (char)('A' + bestShift);
         }
+
     }
 }

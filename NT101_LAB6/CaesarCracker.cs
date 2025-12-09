@@ -5,8 +5,7 @@ using System.Text;
 public static class CaesarCracker
 {
 
-    private static readonly string[] commonWords = {" the ", " and ", " of ", " to ", " in ", " that ", " is ", " it ", " for ", " on ", 
-        " la ", " va ", " cua ", " khong ", " mot ", " nay ", " sinh vien ", " bai ", " lab " };
+    private static readonly string[] commonWords = {" the ", " and ", " of ", " to ", " in ", " that ", " is ", " it ", " for ", " on "};
 
     private static char ShiftChar(char c, int shift)
     {
