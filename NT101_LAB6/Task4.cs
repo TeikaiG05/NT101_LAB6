@@ -35,8 +35,7 @@ namespace NT101_LAB6
                     return;
                 }
                 string mode = cboMode.SelectedItem.ToString();
-                byte[] key = Encoding.ASCII.GetBytes(txtKey.Text);
-
+                byte[] key = DesCipher.FromHex(txtKey.Text.Trim());
                 if (key.Length != 8)
                 {
                     MessageBox.Show("Key phải đúng 8 byte (8 ký tự ASCII).", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -97,7 +96,7 @@ namespace NT101_LAB6
                 lblStatus.Text = "";
                 
                 string mode = cboMode.SelectedItem.ToString();
-                byte[] key = Encoding.ASCII.GetBytes(txtKey.Text);
+                byte[] key = DesCipher.FromHex(txtKey.Text.Trim());
 
                 if (key.Length != 8)
                 {

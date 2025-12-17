@@ -171,6 +171,23 @@ namespace NT101_LAB6
             return sb.ToString();
         }
 
+        public static string MappingToString(Dictionary<char, char> map)
+        {
+            var cipherLine = new StringBuilder();
+            var plainLine = new StringBuilder();
+
+            cipherLine.Append("cipher: ");
+            plainLine.Append("plain : ");
+
+            foreach (char c in "abcdefghijklmnopqrstuvwxyz")
+            {
+                cipherLine.Append(c);
+                plainLine.Append(map[c]);
+            }
+
+            return cipherLine.ToString() + Environment.NewLine + plainLine.ToString();
+        }
+
         private static Dictionary<char, char> CloneMap(Dictionary<char, char> src)
         {
             return src.ToDictionary(kv => kv.Key, kv => kv.Value);
@@ -215,7 +232,7 @@ namespace NT101_LAB6
             double temperature = 10.0;
             double cooling = Math.Pow(0.001, 1.0 / Math.Max(1, iterations));
 
-            for (int it = 0; it < iterations; it++)
+            for (int i = 0; i < iterations; i++)
             {
                 var newMap = CloneMap(currentMap);
                 RandomSwap(newMap, rnd);
@@ -261,23 +278,6 @@ namespace NT101_LAB6
             }
 
             return best;
-        }
-
-        public static string MappingToString(Dictionary<char, char> map)
-        {
-            var cipherLine = new StringBuilder();
-            var plainLine = new StringBuilder();
-
-            cipherLine.Append("cipher: ");
-            plainLine.Append("plain : ");
-
-            foreach (char c in "abcdefghijklmnopqrstuvwxyz")
-            {
-                cipherLine.Append(c);
-                plainLine.Append(map[c]);
-            }
-
-            return cipherLine.ToString() + Environment.NewLine + plainLine.ToString();
         }
     }
 }

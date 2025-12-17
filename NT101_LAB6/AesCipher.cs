@@ -5,6 +5,7 @@ namespace NT101_LAB6
 {
     public static class AesCipher
     {
+        //Cac bang hang cua AES-128
         private static readonly byte[] SBox =
         {
             0x63,0x7c,0x77,0x7b,0xf2,0x6b,0x6f,0xc5,0x30,0x01,0x67,0x2b,0xfe,0xd7,0xab,0x76,
@@ -25,6 +26,7 @@ namespace NT101_LAB6
             0x8c,0xa1,0x89,0x0d,0xbf,0xe6,0x42,0x68,0x41,0x99,0x2d,0x0f,0xb0,0x54,0xbb,0x16
         };
 
+        //Nghich dao cua SBox (dung trong giai ma)
         private static readonly byte[] InvSBox =
         {
             0x52,0x09,0x6a,0xd5,0x30,0x36,0xa5,0x38,0xbf,0x40,0xa3,0x9e,0x81,0xf3,0xd7,0xfb,
@@ -45,6 +47,7 @@ namespace NT101_LAB6
             0x17,0x2b,0x04,0x7e,0xba,0x77,0xd6,0x26,0xe1,0x69,0x14,0x63,0x55,0x21,0x0c,0x7d
         };
 
+        //Hang so round dung trong Key Expansion
         private static readonly byte[] Rcon =
         {
             0x00,
@@ -99,27 +102,29 @@ namespace NT101_LAB6
                     throw new ArgumentException("Unsupported mode. Use ECB or CBC.");
             }
         }
-
+        //Ma hoa tung block 16 byte doc lap
         private static byte[] EncryptEcb(byte[] plaintext, byte[] expandedKey)
         {
-            byte[] padded = Pkcs7Pad(plaintext, BlockSize);
+            byte[] padded = Pkcs7Pad(plaintext, BlockSize); //pad de do dai la boi so cua 16
             byte[] output = new byte[padded.Length];
 
+            // Moi block 16 byte duoc ma hoa doc lap
             for (int i = 0; i < padded.Length; i += BlockSize)
             {
                 byte[] block = new byte[BlockSize];
                 Buffer.BlockCopy(padded, i, block, 0, BlockSize);
 
-                byte[] enc = CipherBlock(block, expandedKey);
+                byte[] enc = CipherBlock(block, expandedKey); //Ma hoa 1 block AES
                 Buffer.BlockCopy(enc, 0, output, i, BlockSize);
             }
 
             return output;
         }
 
+        //Giai tung block 16 byte doc lap
         private static byte[] DecryptEcb(byte[] ciphertext, byte[] expandedKey)
         {
-            if (ciphertext.Length % BlockSize != 0)
+            if (ciphertext.Length % BlockSize != 0) //kiem tra do dai hop le
                 throw new ArgumentException("Ciphertext length must be multiple of 16 bytes.");
 
             byte[] output = new byte[ciphertext.Length];
@@ -129,18 +134,19 @@ namespace NT101_LAB6
                 byte[] block = new byte[BlockSize];
                 Buffer.BlockCopy(ciphertext, i, block, 0, BlockSize);
 
-                byte[] dec = InvCipherBlock(block, expandedKey);
+                byte[] dec = InvCipherBlock(block, expandedKey); //Giai ma 1 block AES
                 Buffer.BlockCopy(dec, 0, output, i, BlockSize);
             }
 
-            return Pkcs7Unpad(output, BlockSize);
+            return Pkcs7Unpad(output, BlockSize); //Bo pad sau khi giai ma de tra ve ban ro
         }
 
         private static (byte[] Ciphertext, byte[] Iv) EncryptCbc(byte[] plaintext, byte[] expandedKey, byte[] iv)
         {
             byte[] padded = Pkcs7Pad(plaintext, BlockSize);
 
-            if (iv == null)
+            // random 16 byte IV neu iv truyen vao la null
+            if (iv == null) 
             {
                 iv = new byte[BlockSize];
                 var rnd = new Random();
@@ -150,6 +156,7 @@ namespace NT101_LAB6
             byte[] output = new byte[padded.Length];
             byte[] prev = (byte[])iv.Clone();
 
+            // Moi block Xor voi block truoc do (hoac IV neu la block dau tien) truoc khi ma hoa
             for (int i = 0; i < padded.Length; i += BlockSize)
             {
                 byte[] block = new byte[BlockSize];
@@ -174,24 +181,26 @@ namespace NT101_LAB6
             byte[] output = new byte[ciphertext.Length];
             byte[] prev = (byte[])iv.Clone();
 
+            //Voi moi block ciphertext
             for (int i = 0; i < ciphertext.Length; i += BlockSize)
             {
                 byte[] block = new byte[BlockSize];
                 Buffer.BlockCopy(ciphertext, i, block, 0, BlockSize);
 
-                byte[] dec = InvCipherBlock(block, expandedKey);
+                byte[] dec = InvCipherBlock(block, expandedKey); //Plaintext da Xor
 
                 for (int j = 0; j < BlockSize; j++)
                     dec[j] ^= prev[j];
 
                 Buffer.BlockCopy(dec, 0, output, i, BlockSize);
-                prev = block;
+                prev = block; //cipher block hien tai tro thanh prev cho lan lap tiep theo
             }
 
             return Pkcs7Unpad(output, BlockSize);
         }
 
 
+        //Xor round key 0 vao state, sau do thuc hien Nr vong lap
         private static byte[] CipherBlock(byte[] input, byte[] expandedKey)
         {
             byte[,] state = new byte[4, Nb];
@@ -203,12 +212,13 @@ namespace NT101_LAB6
 
             for (int round = 1; round < Nr; round++)
             {
-                SubBytes(state);
-                ShiftRows(state);
-                MixColumns(state);
-                AddRoundKey(state, expandedKey, round);
+                SubBytes(state); //thay byte qua SBox
+                ShiftRows(state); //Xoay hang
+                MixColumns(state); //Tron cot
+                AddRoundKey(state, expandedKey, round); //XOR round key 
             }
 
+            //round cuoi khong co MixColumns, tra ve encblock
             SubBytes(state);
             ShiftRows(state);
             AddRoundKey(state, expandedKey, Nr);
@@ -220,6 +230,7 @@ namespace NT101_LAB6
             return output;
         }
 
+        //Xor round key cuoi truoc
         private static byte[] InvCipherBlock(byte[] input, byte[] expandedKey)
         {
             byte[,] state = new byte[4, Nb];
@@ -231,10 +242,10 @@ namespace NT101_LAB6
 
             for (int round = Nr - 1; round >= 1; round--)
             {
-                InvShiftRows(state);
-                InvSubBytes(state);
-                AddRoundKey(state, expandedKey, round);
-                InvMixColumns(state);
+                InvShiftRows(state); //Dao nguoc buoc ShiftRows
+                InvSubBytes(state); //Thay byte bang bang InvSBox
+                AddRoundKey(state, expandedKey, round); 
+                InvMixColumns(state); //Tron cot nguoc
             }
 
             InvShiftRows(state);
@@ -248,6 +259,7 @@ namespace NT101_LAB6
             return output;
         }
 
+        //Thay moi byte trong state bang bang SBox
         private static void SubBytes(byte[,] state)
         {
             for (int r = 0; r < 4; r++)
@@ -255,6 +267,7 @@ namespace NT101_LAB6
                     state[r, c] = SBox[state[r, c]];
         }
 
+        //Dao nguoc buoc SubBytes
         private static void InvSubBytes(byte[,] state)
         {
             for (int r = 0; r < 4; r++)
@@ -262,6 +275,7 @@ namespace NT101_LAB6
                     state[r, c] = InvSBox[state[r, c]];
         }
 
+        //Xoay hang cua state
         private static void ShiftRows(byte[,] state)
         {
             byte tmp;
@@ -286,6 +300,7 @@ namespace NT101_LAB6
             state[3, 0] = tmp;
         }
 
+        //Dao nguoc buoc ShiftRows
         private static void InvShiftRows(byte[,] state)
         {
             byte tmp;
@@ -310,6 +325,7 @@ namespace NT101_LAB6
             state[3, 3] = tmp;
         }
 
+        //Nhan hai byte trong field GF(2^8)
         private static byte Multiply(byte x, byte y)
         {
             byte result = 0;
@@ -329,6 +345,7 @@ namespace NT101_LAB6
             return result;
         }
 
+        //Tron cot cua state
         private static void MixColumns(byte[,] state)
         {
             for (int c = 0; c < 4; c++)
@@ -345,6 +362,7 @@ namespace NT101_LAB6
             }
         }
 
+        //Tron cot nguoc cua state
         private static void InvMixColumns(byte[,] state)
         {
             for (int c = 0; c < 4; c++)
@@ -361,6 +379,7 @@ namespace NT101_LAB6
             }
         }
 
+        //Xor round key vao state
         private static void AddRoundKey(byte[,] state, byte[] expandedKey, int round)
         {
             int start = round * 16;
@@ -373,6 +392,7 @@ namespace NT101_LAB6
             }
         }
 
+        // Tu key 16 byte tao ra expanded key cho cac round
         private static byte[] KeyExpansion(byte[] key)
         {
             byte[] w = new byte[Nb * (Nr + 1) * 4];
@@ -411,6 +431,7 @@ namespace NT101_LAB6
             return w;
         }
 
+        //PKCS7 Padding va Unpadding de dam bao du lieu co do dai boi so cua 16
         private static byte[] Pkcs7Pad(byte[] data, int blockSize)
         {
             int padLen = blockSize - (data.Length % blockSize);

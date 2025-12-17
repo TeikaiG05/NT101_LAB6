@@ -32,13 +32,15 @@ namespace NT101_LAB6
             try
             {
                 string mode = cmbMode.SelectedItem.ToString();
-                string keyStr = txtKey.Text.Trim();
-                if (keyStr.Length != 16)
+                string keyHex = txtKey.Text.Trim();
+                keyHex = new string(keyHex.Where(c => !char.IsWhiteSpace(c)).ToArray());
+
+                if (keyHex.Length != 32)
                 {
-                    MessageBox.Show("Key must be exactly 16 characters (16 bytes) for AES-128.");
+                    MessageBox.Show("Key AES-128 phải là 32 ký tự HEX (16 bytes).");
                     return;
                 }
-                byte[] key = Encoding.ASCII.GetBytes(keyStr);
+                byte[] key = AesCipher.FromHex(keyHex);
 
                 byte[] plain = Encoding.UTF8.GetBytes(txtPlain.Text);
 
@@ -73,15 +75,16 @@ namespace NT101_LAB6
             try
             {
                 string mode = cmbMode.SelectedItem.ToString();
-                string keyStr = txtKey.Text.Trim();
+                string keyHex = txtKey.Text.Trim();
+                keyHex = new string(keyHex.Where(c => !char.IsWhiteSpace(c)).ToArray());
 
-                if (keyStr.Length != 16)
+                if (keyHex.Length != 32)
                 {
-                    MessageBox.Show("Key must be exactly 16 characters (16 bytes) for AES-128.");
+                    MessageBox.Show("Key AES-128 phải là 32 ký tự HEX (16 bytes).");
                     return;
                 }
 
-                byte[] key = Encoding.ASCII.GetBytes(keyStr);
+                byte[] key = AesCipher.FromHex(keyHex);
                 byte[] cipher = AesCipher.FromHex(txtCipherHex.Text);
 
                 byte[] iv = null;

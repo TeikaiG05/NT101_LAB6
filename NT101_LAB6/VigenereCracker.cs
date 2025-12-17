@@ -18,13 +18,16 @@ namespace NT101_LAB6
 
         public static (string key, string plaintext) Crack(string cipher)
         {
+            // Chuyen doi van ban thanh chu in hoa va loai bo ky tu khong phai chu cai
             string upper = ToLettersUpper(cipher, out int[] letterIndexMap);
 
             if (upper.Length == 0)
                 return ("", cipher);
 
+            //Uoc luong do dai khoa
             int keyLen = EstimateKeyLength(upper);
 
+            //Tim khoa theo tan so
             string key = FindKeyByFrequency(upper, keyLen);
 
             {
@@ -56,6 +59,7 @@ namespace NT101_LAB6
             return (key, plaintext);
         }
 
+        // Giai ma van ban bang khoa Vigenere
         public static string Decrypt(string cipher, string key)
         {
             if (string.IsNullOrEmpty(key))
@@ -64,8 +68,11 @@ namespace NT101_LAB6
             int keyLen = key.Length;
             int keyPos = 0;
             var sb = new StringBuilder(cipher.Length);
+
+            // Duyet tung ky tu trong van ban ma hoa
             foreach (char ch in cipher)
             {
+                // Neu la chu cai, giai ma no
                 if (char.IsLetter(ch))
                 {
                     bool isUpper = char.IsUpper(ch);
@@ -77,7 +84,7 @@ namespace NT101_LAB6
                     sb.Append(p);
                     keyPos++;
                 }
-                else
+                else // Neu khong phai chu cai, giu nguyen no
                 {
                     sb.Append(ch);
                 }
@@ -85,6 +92,7 @@ namespace NT101_LAB6
             return sb.ToString();
         }
 
+        // Chuyen doi van ban thanh chu in hoa va loai bo ky tu khong phai chu cai
         private static string ToLettersUpper(string text, out int[] letterIndexMap)
         {
             var sb = new StringBuilder(text.Length);
@@ -104,6 +112,7 @@ namespace NT101_LAB6
             return sb.ToString();
         }
 
+        // Tinh chi so xac dinh thong tin cua mot chuoi
         private static double ComputeIC(string s)
         {
             int[] freq = new int[26];
@@ -118,6 +127,8 @@ namespace NT101_LAB6
             }
             if (n < 2) return 0.0;
             double sum = 0;
+
+            // Tinh tong freq[i] * (freq[i] - 1)
             for (int i = 0; i < 26; i++)
             {
                 sum += freq[i] * (freq[i] - 1);
@@ -125,6 +136,7 @@ namespace NT101_LAB6
             return sum / (double)(n * (n - 1));
         }
 
+        // Uoc luong do dai khoa bang chi so xac dinh thong tin
         private static int EstimateKeyLength(string upper)
         {
             int bestLen = 1;
@@ -134,7 +146,7 @@ namespace NT101_LAB6
             {
                 double icSum = 0.0;
                 int segments = 0;
-
+                // Chia van ban thanh cac doan voi do dai bang do dai khoa
                 for (int offset = 0; offset < len; offset++)
                 {
                     var sb = new StringBuilder();
@@ -144,7 +156,7 @@ namespace NT101_LAB6
                         if (c >= 'A' && c <= 'Z')
                             sb.Append(c);
                     }
-
+                    // Tinh chi so xac dinh thong tin cho doan hien tai
                     if (sb.Length > 0)
                     {
                         double ic = ComputeIC(sb.ToString());
@@ -152,6 +164,7 @@ namespace NT101_LAB6
                         segments++;
                     }
                 }
+                // Tinh chi so xac dinh thong tin trung binh cho do dai khoa hien tai
                 if (segments == 0) continue;
                 double avgIC = icSum / segments;
                 double diff = Math.Abs(avgIC - englishIC);
@@ -164,30 +177,37 @@ namespace NT101_LAB6
             return bestLen;
         }
 
+        // Tim khoa bang phuong phap tan so
         private static string FindKeyByFrequency(string upper, int keyLen)
         {
             var key = new char[keyLen];
+            // Duyet tung doan thuoc khoa
             for (int pos = 0; pos < keyLen; pos++)
             {
                 var sb = new StringBuilder();
+                // Lay cac ky tu thuoc doan hien tai
                 for (int i = pos; i < upper.Length; i += keyLen)
                 {
                     char c = upper[i];
                     if (c >= 'A' && c <= 'Z')
                         sb.Append(c);
                 }
+                // Tim shift tot nhat cho doan hien tai
                 key[pos] = FindBestShift(sb.ToString());
             }
             return new string(key);
         }
 
+        // Tim shift tot nhat cho mot doan van ban
         private static char FindBestShift(string subset)
         {
+            // Neu doan rong thi tra ve 'A' (khong shift)
             if (subset.Length == 0) return 'A';
 
             double bestChi = double.MaxValue;
             int bestShift = 0;
 
+            // Duyet tung shift tu 0 den 25
             for (int shift = 0; shift < 26; shift++)
             {
                 int[] freq = new int[26];
@@ -202,18 +222,21 @@ namespace NT101_LAB6
                 }
                 if (n == 0) continue;
                 double chi2 = 0.0;
+                // Duyet tung chu cai trong bang chu cai
                 for (int i = 0; i < 26; i++)
                 {
                     double expected = EnglishFreq[i] * n / 100.0;
                     double diff = freq[i] - expected;
                     chi2 += diff * diff / (expected + 1e-9);
                 }
+                // Cap nhat shift tot nhat
                 if (chi2 < bestChi)
                 {
                     bestChi = chi2;
                     bestShift = shift;
                 }
             }
+            // Tra ve ky tu ung voi shift tot nhat
             return (char)('A' + bestShift);
         }
 

@@ -5,6 +5,7 @@ namespace NT101_LAB6
 {
     public static class DesCipher
     {
+        // Cac bang hoan vi va S-box duoc su dung trong DES
         private static readonly int[] IP =
         {
             58,50,42,34,26,18,10,2,
@@ -187,20 +188,21 @@ namespace NT101_LAB6
 
         private static byte[] EncryptEcb(byte[] plaintext, byte[] key)
         {
-            byte[] padded = Pkcs7Pad(plaintext);
-            var keyBits = BytesToBits(key);
-            var subKeys = GenerateSubkeys(keyBits);
+            byte[] padded = Pkcs7Pad(plaintext); //block 8byte
+            var keyBits = BytesToBits(key); //doi 8 byte sang 64 bit
+            var subKeys = GenerateSubkeys(keyBits); //tao 16 subkey (48bit)
 
             byte[] output = new byte[padded.Length];
 
+            //Xu ly moi block 8 byte
             for (int i = 0; i < padded.Length; i += 8)
             {
                 byte[] block = new byte[8];
                 Buffer.BlockCopy(padded, i, block, 0, 8);
 
-                int[] bits = BytesToBits(block);
-                int[] encBits = DesBlockEncrypt(bits, subKeys);
-                byte[] encBlock = BitsToBytes(encBits);
+                int[] bits = BytesToBits(block); //doi 8 byte sang 64 bit
+                int[] encBits = DesBlockEncrypt(bits, subKeys); //ma hoa block 64 bit
+                byte[] encBlock = BitsToBytes(encBits); //doi 64 bit sang 8 byte
 
                 Buffer.BlockCopy(encBlock, 0, output, i, 8);
             }
@@ -210,21 +212,21 @@ namespace NT101_LAB6
 
         private static byte[] DecryptEcb(byte[] ciphertext, byte[] key)
         {
-            if (ciphertext.Length % 8 != 0)
+            if (ciphertext.Length % 8 != 0) //check cipher chia 8 byte
                 throw new ArgumentException("Ciphertext length must be multiple of 8 bytes.");
-
-            var keyBits = BytesToBits(key);
-            var subKeys = GenerateSubkeys(keyBits);
+            
+            var keyBits = BytesToBits(key); 
+            var subKeys = GenerateSubkeys(keyBits); //tao 16 subkey
 
             byte[] output = new byte[ciphertext.Length];
 
             for (int i = 0; i < ciphertext.Length; i += 8)
             {
-                byte[] block = new byte[8];
+                byte[] block = new byte[8]; //lay block 8 byte
                 Buffer.BlockCopy(ciphertext, i, block, 0, 8);
 
                 int[] bits = BytesToBits(block);
-                int[] decBits = DesBlockDecrypt(bits, subKeys);
+                int[] decBits = DesBlockDecrypt(bits, subKeys); //giai des 1 block
                 byte[] decBlock = BitsToBytes(decBits);
 
                 Buffer.BlockCopy(decBlock, 0, output, i, 8);
@@ -232,7 +234,7 @@ namespace NT101_LAB6
 
             try
             {
-                return Pkcs7Unpad(output);
+                return Pkcs7Unpad(output); //bo pad tra plaintext goc 
             }
             catch
             {
@@ -243,17 +245,17 @@ namespace NT101_LAB6
 
         private static (byte[] Ciphertext, byte[] Iv) EncryptCbc(byte[] plaintext, byte[] key, byte[] iv)
         {
-            byte[] padded = Pkcs7Pad(plaintext);
+            byte[] padded = Pkcs7Pad(plaintext); //nhu ECB
 
-            if (iv == null)
+            if (iv == null) //neu null -> tao IV cho blox dau
             {
                 iv = new byte[8];
                 var rnd = new Random();
-                rnd.NextBytes(iv);
+                rnd.NextBytes(iv); 
             }
 
             var keyBits = BytesToBits(key);
-            var subKeys = GenerateSubkeys(keyBits);
+            var subKeys = GenerateSubkeys(keyBits); 
 
             byte[] output = new byte[padded.Length];
             byte[] prev = (byte[])iv.Clone();
@@ -263,6 +265,7 @@ namespace NT101_LAB6
                 byte[] block = new byte[8];
                 Buffer.BlockCopy(padded, i, block, 0, 8);
 
+                // Moi block Xor voi block truoc do (hoac IV neu la block dau tien)
                 for (int j = 0; j < 8; j++)
                     block[j] ^= prev[j];
 
@@ -279,7 +282,7 @@ namespace NT101_LAB6
 
         private static byte[] DecryptCbc(byte[] ciphertext, byte[] key, byte[] iv)
         {
-            if (ciphertext.Length % 8 != 0)
+            if (ciphertext.Length % 8 != 0) //check cipher chia 8 byte
                 throw new ArgumentException("Ciphertext length must be multiple of 8 bytes.");
 
             var keyBits = BytesToBits(key);
@@ -294,7 +297,7 @@ namespace NT101_LAB6
                 Buffer.BlockCopy(ciphertext, i, block, 0, 8);
 
                 int[] bits = BytesToBits(block);
-                int[] decBits = DesBlockDecrypt(bits, subKeys);
+                int[] decBits = DesBlockDecrypt(bits, subKeys); //giai des ra plaintext da xor
                 byte[] decBlock = BitsToBytes(decBits);
 
                 for (int j = 0; j < 8; j++)
@@ -314,7 +317,7 @@ namespace NT101_LAB6
             }
         }
 
-
+        // Ma hoa 1 block 64 bit, tra ve block 64 bit da ma hoa
         private static int[] DesBlockEncrypt(int[] block64, int[][] subKeys)
         {
             int[] permuted = Permute(block64, IP);
@@ -339,6 +342,7 @@ namespace NT101_LAB6
             return Permute(combined, FP);
         }
 
+        // Giai ma 1 block 64 bit, tra ve block 64 bit da giai ma
         private static int[] DesBlockDecrypt(int[] block64, int[][] subKeys)
         {
             int[] permuted = Permute(block64, IP);
@@ -363,7 +367,7 @@ namespace NT101_LAB6
             return Permute(combined, FP);
         }
 
-
+        // Ham F trong DES
         private static int[] F(int[] R, int[] subKey)
         {
             int[] expanded = Permute(R, E);
@@ -373,6 +377,7 @@ namespace NT101_LAB6
             return permuted;
         }
 
+        // Ham thay the S-box
         private static int[] SBoxSubstitution(int[] input48)
         {
             int[] output = new int[32];
@@ -402,10 +407,12 @@ namespace NT101_LAB6
             return output;
         }
 
-        private static int[][] GenerateSubkeys(int[] key64)
+        // Tao 16 subkey 48 bit tu key 64 bit
+        private static int[][] GenerateSubkeys(int[] key64) //bien key 64 bit thanh 16 subkey 48 bit
         {
-            int[] key56 = Permute(key64, PC1);
+            int[] key56 = Permute(key64, PC1); //chon 56 bit tu 64 bit
 
+            //tach 56 bit thanh 2 phan C va D moi phan 28 bit
             int[] C = new int[28];
             int[] D = new int[28];
             Array.Copy(key56, 0, C, 0, 28);
@@ -415,14 +422,16 @@ namespace NT101_LAB6
 
             for (int round = 0; round < 16; round++)
             {
+                //dich trai C va D theo so luong quy dinh
                 C = LeftRotate(C, SHIFTS[round]);
                 D = LeftRotate(D, SHIFTS[round]);
 
+                //ket hop C va D lai thanh 56 bit
                 int[] CD = new int[56];
                 Array.Copy(C, 0, CD, 0, 28);
                 Array.Copy(D, 0, CD, 28, 28);
 
-                subKeys[round] = Permute(CD, PC2);
+                subKeys[round] = Permute(CD, PC2); //chuyen 56 bit thanh 48 bit
             }
 
             return subKeys;
@@ -460,6 +469,7 @@ namespace NT101_LAB6
             return data;
         }
 
+        // Ham hoan vi
         private static int[] Permute(int[] input, int[] table)
         {
             int[] output = new int[table.Length];
@@ -470,6 +480,7 @@ namespace NT101_LAB6
             return output;
         }
 
+        // Ham XOR hai mang bit
         private static int[] Xor(int[] a, int[] b)
         {
             int[] r = new int[a.Length];
@@ -478,6 +489,7 @@ namespace NT101_LAB6
             return r;
         }
 
+        // Ham dich trai mang bit
         private static int[] LeftRotate(int[] bits, int shift)
         {
             int[] result = new int[bits.Length];
